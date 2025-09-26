@@ -1,26 +1,51 @@
+/* src/app/globals.css */
+
 @import "tailwindcss";
 
+/* --- 变量定义区 --- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+    --background: #ffffff; /* 亮色模式：背景白 */
+    --foreground: #171717; /* 亮色模式：文字黑 */
+    --input-bg: #ffffff; /* 亮色模式：输入框背景白 */
+    --input-border: #d1d5db; /* 亮色模式：输入框边框灰 */
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+    :root {
+        --background: #0a0a0a; /* 暗黑模式：背景黑 */
+        --foreground: #ededed; /* 暗黑模式：文字白 */
+        --input-bg: #1f1f1f; /* 暗黑模式：输入框背景深灰 (比主背景稍亮) */
+        --input-border: #3a3a3a; /* 暗黑模式：输入框边框中灰 */
+    }
 }
 
+/* @theme inline ... (这部分可以保留也可以删除，影响不大) */
+
+
+/* --- 全局样式应用区 --- */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    /* 删掉了 font-family, 建议让 Tailwind 的默认字体生效，更好看 */
 }
+
+/* === 这就是我们新增的核心代码 === */
+input,
+textarea {
+    /* 告诉输入框，请使用我们定义的文字和背景颜色 */
+    color: var(--foreground);
+    background-color: var(--input-bg);
+    /* 再给它们加上一些现代化的样式 */
+    border: 1px solid var(--input-border);
+    border-radius: 0.375rem; /* 6px 圆角 */
+    padding: 0.5rem 0.75rem; /* 8px 12px 的内边距 */
+    /* 当用户点击输入框时，显示一个蓝色的轮廓，更醒目 */
+    &:focus
+
+{
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+}
+/* === 新增代码结束 === */
