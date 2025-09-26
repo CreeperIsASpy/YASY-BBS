@@ -1,12 +1,10 @@
 // src/app/page.tsx
 
-// 注意这里的 import 语句，我们使用新的 @supabase/ssr 包来确保兼容性
-import { createServerClient } from '@supabase/ssr';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'; // 确保是从 'auth-helpers-nextjs' 导入
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
-// 我们不再需要 force-dynamic，因为 Next.js 会自动检测动态函数的使用
-// export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 type TopThread = {
     id: number;
@@ -25,29 +23,13 @@ function createPreview(markdown: string, length: number = 50) {
 }
 
 export default async function Home() {
-    // === 这是修正的部分 START ===
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return cookieStore.get(name)?.value;
-                },
-            },
-        }
-    );
-    // === 这是修正的部分 END ===
+    // === 使用 @supabase/auth-helpers-nextjs 的正确、简洁的写法 ===
+    const supabase = createServerComponentClient({ cookies });
 
     const { data: threads, error } = await supabase.rpc('get_top_5_liked_threads');
 
-    // 这行日志会打印在运行 `npm run dev` 的那个命令行窗口里
-    // console.log('Fetched threads:', threads);
-    // console.log('Fetch error:', error);
-
     if (error) {
-        console.error('Error fetching top threads:', error);
+        console.error('Error fetching top threads from server:', error);
     }
 
     const topThreads = threads as TopThread[] || [];
