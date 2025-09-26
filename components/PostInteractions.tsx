@@ -33,7 +33,7 @@ export default function PostInteractions({
     const [hasLiked, setHasLiked] = useState(userHasLiked);
     const [isLiking, setIsLiking] = useState(false);
 
-    const [isPending, startTransition] = useTransition();
+    // const [isPending, startTransition] = useTransition(); 没用到
 
     const handleLike = async () => {
         if (!user) {

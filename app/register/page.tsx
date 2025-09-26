@@ -14,7 +14,7 @@ export default function RegisterPage() {
         e.preventDefault();
         try {
             // 调用我们自己创建的 Edge Function
-            const { data, error } = await supabase.functions.invoke('sign-up-with-validation', {
+            const { error } = await supabase.functions.invoke('sign-up-with-validation', {
                 body: { email, password, username },
             });
 
@@ -22,8 +22,12 @@ export default function RegisterPage() {
 
             alert('注册成功！请登录。');
             router.push('/login');
-        } catch (error: any) {
-            alert('注册失败: ' + error.message);
+        } catch (error) {
+            if (error instanceof Error) {
+                alert('注册失败: ' + error.message);
+            } else {
+                alert('发生未知错误');
+            }
         }
     };
 
