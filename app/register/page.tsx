@@ -1,5 +1,4 @@
 'use client';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -7,19 +6,29 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const supabase = createClientComponentClient();
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+        
         try {
-            // 调用我们自己创建的 Edge Function
-            const { error } = await supabase.functions.invoke('sign-up-with-validation', {
-                body: { email, password, username },
+            // 调用本地 API 路由而不是 Edge Function
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password, username }),
             });
-
-            if (error) throw error;
-
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || '注册失败');
+            }
+            
             alert('注册成功！请登录。');
             router.push('/login');
         } catch (error) {
@@ -28,6 +37,8 @@ export default function RegisterPage() {
             } else {
                 alert('发生未知错误');
             }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -41,6 +52,7 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full p-2 border rounded mb-2"
+                    disabled={loading}
                 />
                 <input
                     type="text"
@@ -48,6 +60,7 @@ export default function RegisterPage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="w-full p-2 border rounded mb-2"
+                    disabled={loading}
                 />
                 <input
                     type="password"
@@ -55,9 +68,14 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full p-2 border rounded mb-2"
+                    disabled={loading}
                 />
-                <button type="submit" className="w-full bg-green-500 text-white p-2 rounded">
-                    注册
+                <button 
+                    type="submit" 
+                    className="w-full bg-green-500 text-white p-2 rounded"
+                    disabled={loading}
+                >
+                    {loading ? '注册中...' : '注册'}
                 </button>
             </form>
         </div>

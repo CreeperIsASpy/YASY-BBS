@@ -7,7 +7,8 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function Header() {
-    const supabase = createServerComponentClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerComponentClient({ cookies: () => cookieStore });
     const {
         data: { session },
     } = await supabase.auth.getSession();
@@ -22,11 +23,9 @@ export default async function Header() {
                 <div className="flex items-center space-x-4">
                     {session ? (
                         <>
-                            {/* === 新增代码 START === */}
                             <Link href="/create-post" className="bg-green-500 px-3 py-1 rounded hover:bg-green-600">
                                 发新帖
                             </Link>
-                            {/* === 新增代码 END === */}
                             <span className="text-sm">欢迎, {session.user.email}</span>
                             <Link href="/dashboard" className="hover:text-gray-300">
                                 仪表盘

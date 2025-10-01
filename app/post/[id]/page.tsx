@@ -35,10 +35,10 @@ export default async function PostPage({ params }: PostPageProps) {
 
     const { data: commentsData } = await supabase
         .from('comments')
-        .select('id, created_at, content')
+        .select(`id, created_at, content, user_id, author:profiles(username)`)
         .eq('thread_id', postId)
         .order('created_at', { ascending: true });
-    const comments = commentsData || [];
+    const comments = commentsData?.map(c => ({ ...c, author: Array.isArray(c.author) ? c.author[0] : c.author })) || [];
 
     const { count: likeCount } = await supabase
         .from('likes')
@@ -63,7 +63,21 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* 帖子正文 (Markdown) */}
             <article className="prose lg:prose-xl max-w-none">
                 <h1>{thread.title}</h1>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    由 {authorName} 发布于 {new Date(thread.created_at).toLocaleString()} 
+                </div>
+            
+                <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        a: ({ node, ...props }) => {
+                            const href = props.href || '';
+                            // 检查链接是否包含协议，如果不包含，添加 https://
+                            const fullHref = href.match(/^https?:\/\//) ? href : `https://${href}`;
+                            return <a {...props} href={fullHref} target="_blank" rel="noopener noreferrer" />;
+                        }
+                    }}
+                >
                     {thread.content}
                 </ReactMarkdown>
             </article>
@@ -79,3 +93,26 @@ export default async function PostPage({ params }: PostPageProps) {
         </div>
     );
 }
+
+{/* 帖子操作按钮 */}
+{session?.user.id === thread.user_id && (
+    <div className="mt-4 flex gap-4">
+        <a href={`/edit-post/${thread.id}`} className="text-sm text-blue-500 hover:underline">
+            编辑帖子
+        </a>
+        <form action={deletePost}>
+            <input type="hidden" name="postId" value={thread.id} />
+            <button type="submit" className="text-sm text-red-500 hover:underline">
+                删除帖子
+            </button>
+        </form>
+    </div>
+)}
+
+// 获取帖子作者信息
+const { data: authorData } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', thread.user_id)
+    .single();
+const authorName = authorData?.username || '匿名用户';

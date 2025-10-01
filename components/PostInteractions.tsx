@@ -8,16 +8,24 @@ import { useState, useTransition } from 'react';
 import type { User } from '@supabase/supabase-js';
 
 // 定义传入这个组件的数据类型
+// 定义一条评论的数据类型
+type CommentWithAuthor = {
+    id: number;
+    created_at: string;
+    content: string;
+    user_id: string;
+    author: {
+        username: string;
+    } | null;
+};
+
+// 定义整个组件的 props 类型
 type PostInteractionsProps = {
     threadId: number;
-    initialComments: {
-        id: number;
-        created_at: string;
-        content: string;
-    }[];
+    initialComments: CommentWithAuthor[];
     initialLikeCount: number;
     userHasLiked: boolean;
-    user: User | null; // 传入当前登录的用户信息
+    user: User | null;
 };
 
 export default function PostInteractions({
@@ -82,6 +90,19 @@ export default function PostInteractions({
         }
     };
 
+    const handleCommentDelete = async (commentId: number) => {
+        if (!user) return;
+        if (!confirm("确定要删除这条评论吗？")) return;
+        
+        const supabase = createClientComponentClient();
+        const { error } = await supabase.from('comments').delete().eq('id', commentId).eq('user_id', user.id);
+        
+        if (!error) {
+            setComments(comments.filter(comment => comment.id !== commentId));
+        } else {
+            alert("删除失败: " + error.message);
+        }
+    };
 
     return (
         <div>
@@ -107,9 +128,24 @@ export default function PostInteractions({
                 <div className="space-y-4">
                     {comments.map((comment) => (
                         <div key={comment.id} className="p-3 bg-gray-100 rounded-lg dark:bg-gray-800">
-                            <p>{comment.content}</p>
-                            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
-                                发布于: {new Date(comment.created_at).toLocaleString()}
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-semibold text-sm">
+                                        {comment.author?.username || '匿名用户'}
+                                    </p>
+                                    <p className="mt-1">{comment.content}</p>
+                                </div>
+                                {user?.id === comment.user_id && (
+                                    <button
+                                        onClick={() => handleCommentDelete(comment.id)}
+                                        className="text-xs text-red-500 hover:underline flex-shrink-0 ml-4"
+                                    >
+                                        删除
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 dark:text-gray-400">
+                                {new Date(comment.created_at).toLocaleString()}
                             </p>
                         </div>
                     ))}

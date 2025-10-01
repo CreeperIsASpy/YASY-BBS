@@ -1,6 +1,6 @@
 // src/app/page.tsx
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'; // 确保是从 'auth-helpers-nextjs' 导入
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 
@@ -23,8 +23,8 @@ function createPreview(markdown: string, length: number = 50) {
 }
 
 export default async function Home() {
-    // === 使用 @supabase/auth-helpers-nextjs 的正确、简洁的写法 ===
-    const supabase = createServerComponentClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerComponentClient({ cookies: () => cookieStore });
 
     const { data: threads, error } = await supabase.rpc('get_top_5_liked_threads');
 

@@ -29,6 +29,16 @@ body {
     /* 删掉了 font-family, 建议让 Tailwind 的默认字体生效，更好看 */
 }
 
+/* Markdown 链接样式 */
+article a {
+    color: #3b82f6; /* 蓝色 */
+    text-decoration: underline;
+}
+
+article a:hover {
+    color: #2563eb; /* 深蓝色 */
+}
+
 /* === 这就是我们新增的核心代码 === */
 input,
 textarea {
