@@ -73,7 +73,7 @@ export default async function Dashboard() {
                                 <p>{comment.content}</p>
                                 <p className="text-xs text-gray-500 mt-1">
                                     评论于: <Link href={`/post/${comment.thread_id}`} className="text-blue-500 hover:underline">
-                                        {comment.threads?.title || '帖子'}
+                                        {comment.threads?.[0]?.title || '帖子'}
                                     </Link> - {new Date(comment.created_at).toLocaleString()}
                                 </p>
                             </div>

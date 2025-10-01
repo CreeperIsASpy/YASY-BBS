@@ -10,8 +10,10 @@ export async function POST(request: Request) {
     const content = String(formData.get('content'));
     const thread_id = String(formData.get('thread_id'));
 
-    const cookieStore = await cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ 
+        cookies: () => Promise.resolve(cookieStore)
+    });
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) {

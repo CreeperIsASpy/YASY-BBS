@@ -7,8 +7,10 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function Header() {
-    const cookieStore = await cookies();
-    const supabase = createServerComponentClient({ cookies: () => cookieStore });
+    const cookieStore = cookies();
+    const supabase = createServerComponentClient({ 
+        cookies: () => Promise.resolve(cookieStore)
+    });
     const {
         data: { session },
     } = await supabase.auth.getSession();
