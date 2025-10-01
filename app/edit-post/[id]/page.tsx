@@ -7,9 +7,9 @@ import { notFound, redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 type EditPostPageProps = {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 };
 
 async function updatePost(formData: FormData) {
@@ -45,7 +45,8 @@ async function updatePost(formData: FormData) {
     return redirect(`/post/${postId}`);
 }
 
-export default async function EditPostPage({ params }: EditPostPageProps) {
+export default async function EditPostPage(props: EditPostPageProps) {
+    const params = await props.params;
     const supabase = createServerComponentClient({ cookies });
     const postId = params.id;
 

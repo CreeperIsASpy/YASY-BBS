@@ -40,6 +40,14 @@ export default async function PostPage({ params }: PostPageProps) {
         .order('created_at', { ascending: true });
     const comments = commentsData?.map(c => ({ ...c, author: Array.isArray(c.author) ? c.author[0] : c.author })) || [];
 
+    // 获取帖子作者信息
+    const { data: authorData } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', thread.user_id)
+        .single();
+    const authorName = authorData?.username || '匿名用户';
+
     const { count: likeCount } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
@@ -57,6 +65,7 @@ export default async function PostPage({ params }: PostPageProps) {
     }
 
     // --- 页面渲染区 (只负责展示) ---
+    
 
     return (
         <div className="container mx-auto p-4">
@@ -90,29 +99,21 @@ export default async function PostPage({ params }: PostPageProps) {
                 userHasLiked={userHasLiked}
                 user={session?.user || null}
             />
+            {/* 帖子操作按钮 
+            {session?.user.id === thread.user_id && (
+                <div className="mt-4 flex gap-4">
+                    <a href={`/edit-post/${thread.id}`} className="text-sm text-blue-500 hover:underline">
+                        编辑帖子
+                    </a>
+                    <form action={deletePost}>
+                        <input type="hidden" name="postId" value={thread.id} />
+                        <button type="submit" className="text-sm text-red-500 hover:underline">
+                            删除帖子
+                        </button>
+                    </form>
+                </div>
+            )} */}
         </div>
     );
 }
 
-{/* 帖子操作按钮 */}
-{session?.user.id === thread.user_id && (
-    <div className="mt-4 flex gap-4">
-        <a href={`/edit-post/${thread.id}`} className="text-sm text-blue-500 hover:underline">
-            编辑帖子
-        </a>
-        <form action={deletePost}>
-            <input type="hidden" name="postId" value={thread.id} />
-            <button type="submit" className="text-sm text-red-500 hover:underline">
-                删除帖子
-            </button>
-        </form>
-    </div>
-)}
-
-// 获取帖子作者信息
-const { data: authorData } = await supabase
-    .from('profiles')
-    .select('username')
-    .eq('id', thread.user_id)
-    .single();
-const authorName = authorData?.username || '匿名用户';
