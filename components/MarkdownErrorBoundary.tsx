@@ -17,24 +17,23 @@ class MarkdownErrorBoundary extends React.Component<Props, State> {
         this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError(error: Error): State {
-        // ¸üĞÂ state£¬ÒÔ±ãÏÂÒ»´ÎäÖÈ¾¿ÉÒÔÏÔÊ¾½µ¼¶ºóµÄ UI
+    // å¦‚æœä¸éœ€è¦ä½¿ç”¨ error å‚æ•°ï¼Œå¯ä»¥ç”¨ä¸‹åˆ’çº¿æ ‡è®°ä¸ºæœ‰æ„å¿½ç•¥
+    static getDerivedStateFromError(_error: Error) {
         return { hasError: true };
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        // ÄãÒ²¿ÉÒÔ½«´íÎóÈÕÖ¾ÉÏ±¨¸øÄ³¸ö·şÎñ
         console.error("Markdown render error caught:", error, errorInfo);
     }
 
     render() {
         if (this.state.hasError) {
-            // Äã¿ÉÒÔ×Ô¶¨Òå½µ¼¶ºóµÄ UI
+            // è‡ªå®šä¹‰é”™è¯¯ UI å±•ç¤º
             return (
                 <div className="p-4 border border-red-500 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                    <p className="font-bold text-red-700 dark:text-red-400">ÄÚÈİäÖÈ¾³ö´í</p>
+                    <p className="font-bold text-red-700 dark:text-red-400">æ¸²æŸ“ Markdown å†…å®¹æ—¶å‡ºé”™</p>
                     <p className="text-sm text-red-600 dark:text-red-500 mt-1">
-                        ÕâÆªÌû×ÓµÄ Markdown ÄÚÈİ¿ÉÄÜ´æÔÚ¸ñÊ½ÎÊÌâ£¨ÀıÈçËğ»µµÄ±í¸ñ£©£¬µ¼ÖÂÎŞ·¨Õı³£ÏÔÊ¾¡£
+                        æ¸²æŸ“ Markdown å†…å®¹æ—¶å‡ºé”™ï¼Œè¯·æ£€æŸ¥å†…å®¹æ ¼å¼æ˜¯å¦æ­£ç¡®ã€‚
                     </p>
                 </div>
             );

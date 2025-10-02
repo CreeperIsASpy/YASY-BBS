@@ -42,12 +42,18 @@ export async function POST(request: Request) {
     
     // 3. 创建用户资料
     if (data.user) {
-      await supabase.from('profiles').insert({
+      const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         username: username,
       });
+
+      if (profileError) {
+        // 如果创建资料失败，删除刚创建的用户
+        await supabase.auth.admin.deleteUser(data.user.id);
+        throw new Error('创建用户资料失败：' + profileError.message);
+      }
     }
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '注册失败';

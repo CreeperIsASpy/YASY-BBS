@@ -1,8 +1,9 @@
 // src/app/post/[id]/page.tsx
 
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+// 在文件顶部添加 createServerActionClient 和 redirect
+import { createServerActionClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostInteractions from '@/components/PostInteractions'; // 引入我们刚创建的组件
@@ -15,11 +16,60 @@ type PostPageProps = {
     };
 };
 
-export default async function PostPage({ params }: PostPageProps) {
-    const supabase = createServerComponentClient({ cookies });
-    const postId = params.id;
+// 添加删除帖子的 server action
+async function deletePost(formData: FormData) {
+    'use server';
+    const postId = formData.get('postId');
+    
+    const cookieStore = cookies();
+    const supabase = createServerActionClient({ 
+        cookies: () => Promise.resolve(cookieStore)
+    });
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        return redirect('/login');
+    }
+
+    // 验证用户是否是帖子作者
+    const { data: thread } = await supabase
+        .from('threads')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+
+    if (!thread || thread.user_id !== session.user.id) {
+        throw new Error('没有权限删除此帖子');
+    }
+
+    // 删除帖子
+    const { error } = await supabase
+        .from('threads')
+        .delete()
+        .eq('id', postId);
+
+    if (error) {
+        throw new Error('删除帖子失败：' + error.message);
+    }
+
+    // 删除成功后重定向到首页
+    redirect('/');
+}
+
+export default async function PostPage({ params }: PostPageProps) {
+    
+    const postIdTemp = await Promise.resolve(params)
+    const postId = postIdTemp.id;
+
+    const cookieStore = cookies();
+    const supabase = createServerComponentClient({ 
+        cookies: () => Promise.resolve(cookieStore)
+    });
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
 
     // --- 数据获取区 (只负责拿数据) ---
 
@@ -79,7 +129,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        a: ({ node, ...props }) => {
+                        a: ({ ...props }) => {
                             const href = props.href || '';
                             // 检查链接是否包含协议，如果不包含，添加 https://
                             const fullHref = href.match(/^https?:\/\//) ? href : `https://${href}`;
@@ -94,25 +144,13 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* 将所有交互逻辑和数据都交给客户端组件处理 */}
             <PostInteractions
                 threadId={thread.id}
-                initialComments={comments}
+                initialComments={comments || []}
                 initialLikeCount={likeCount || 0}
                 userHasLiked={userHasLiked}
                 user={session?.user || null}
+                thread={thread}
+                deletePost={deletePost}
             />
-            {/* 帖子操作按钮 
-            {session?.user.id === thread.user_id && (
-                <div className="mt-4 flex gap-4">
-                    <a href={`/edit-post/${thread.id}`} className="text-sm text-blue-500 hover:underline">
-                        编辑帖子
-                    </a>
-                    <form action={deletePost}>
-                        <input type="hidden" name="postId" value={thread.id} />
-                        <button type="submit" className="text-sm text-red-500 hover:underline">
-                            删除帖子
-                        </button>
-                    </form>
-                </div>
-            )} */}
         </div>
     );
 }

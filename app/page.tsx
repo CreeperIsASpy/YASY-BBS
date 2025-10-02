@@ -25,7 +25,7 @@ function createPreview(markdown: string, length: number = 50) {
 export default async function Home() {
     const cookieStore = cookies();
     const supabase = createServerComponentClient({ 
-        cookies: () => Promise.resolve(cookieStore)
+        cookies: () => Promise.resolve(cookieStore),
     });
 
     const { data: threads, error } = await supabase.rpc('get_top_5_liked_threads');

@@ -24,11 +24,12 @@ export default async function Dashboard() {
         .order('created_at', { ascending: false });
 
     // 获取用户的评论
-    const { data: userComments } = await supabase
+    const { data: userCommentsTemp } = await supabase
         .from('comments')
         .select('id, content, created_at, thread_id, threads(title)')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
+    const userComments = userCommentsTemp?.map(c => ({ ...c, thread: Array.isArray(c.threads) ? c.threads[0] : c.threads })) || [];
 
     // 获取用户资料，包括用户名
     const { data: userProfile } = await supabase
