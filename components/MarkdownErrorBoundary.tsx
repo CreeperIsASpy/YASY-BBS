@@ -18,6 +18,7 @@ class MarkdownErrorBoundary extends React.Component<Props, State> {
     }
 
     // 如果不需要使用 error 参数，可以用下划线标记为有意忽略
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     static getDerivedStateFromError(_error: Error) {
         return { hasError: true };
     }

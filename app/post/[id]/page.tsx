@@ -7,7 +7,8 @@ import { notFound, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostInteractions from '@/components/PostInteractions'; // 引入我们刚创建的组件
-import { Components } from 'react-markdown';
+import Image from 'next/image';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -148,7 +149,6 @@ export default async function PostPage({ params }: PostPageProps) {
     }
     // 定义代码块组件的 props 类型
     type CodeBlockProps = {
-        node?: any;
         inline?: boolean;
         className?: string;
         children?: React.ReactNode;
@@ -166,14 +166,10 @@ export default async function PostPage({ params }: PostPageProps) {
                 <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     由 {authorName} 发布于 {new Date(thread.created_at).toLocaleString()} 
                 </div>
-                
-
-                // 在 ReactMarkdown 组件中
                 <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
                         code: ({ inline, className, children, ...props }: CodeBlockProps) => {
-                            const match = /language-(\w+)/.exec(className || '');
                             return !inline ? (
                                 <pre className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
                                     <code className={className} {...props}>
@@ -187,14 +183,22 @@ export default async function PostPage({ params }: PostPageProps) {
                             );
                         },
                         // 引用
-                        blockquote: ({node, children}) => (
+                        blockquote: ({children}) => (
                             <blockquote className="border-l-4 border-gray-300 pl-4 italic">
                                 {children}
                             </blockquote>
                         ),
+                        p: ({children}) => <div className="my-4">{children}</div>,
                         // 图片
-                        img: ({node, ...props}) => (
-                            <img className="max-w-full h-auto rounded-lg shadow-lg" {...props} />
+                        img: ({alt, src}) => (
+                            <Image
+                                src={String(src)}
+                                alt={alt || ''}
+                                width={800}
+                                height={500}
+                                className="max-w-full h-auto rounded-lg shadow-lg"
+                                unoptimized
+                            />
                         ),
                         // 表格
                         table: ({children}) => (
