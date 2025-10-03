@@ -1,88 +1,43 @@
-// src/app/create-post/page.tsx
+'use client';
 
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import MDEditor from '@uiw/react-md-editor';
+import { useState } from 'react';
 
-export const dynamic = 'force-dynamic';
-
-// --- 这是 Server Action 函数 ---
-// 它会在服务器上运行，处理我们的表单提交
-async function createPost(formData: FormData) {
-    'use server'; // 声明这是一个 Server Action
-
-    const title = String(formData.get('title'));
-    const content = String(formData.get('content'));
-
-    const supabase = createServerActionClient({ cookies });
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-        return redirect('/login');
-    }
-
-    // 将新帖子插入数据库，并立即取回它的 id
-    const { data: newPost, error } = await supabase
-        .from('threads')
-        .insert({
-            title,
-            content,
-            user_id: session.user.id,
-        })
-        .select('id')
-        .single();
-
-    if (error) {
-        // 简单处理错误，你可以在这里做得更复杂
-        console.error('Error creating post:', error);
-        return redirect('/create-post?error=无法创建帖子');
-    }
-
-    // 如果成功，重定向到新帖子的详情页
-    redirect(`/post/${newPost.id}`);
-}
-// --- Server Action 函数结束 ---
-
-
-// --- 这是页面组件 ---
-export default function CreatePostPage() {
+export default function CreatePost() {
+    const [content, setContent] = useState('');
+    
     return (
-        <div className="container mx-auto p-4 max-w-2xl">
-            <h1 className="text-3xl font-bold mb-6">发布一个新帖子</h1>
-
-            {/* 表单的 action 直接绑定我们上面定义的 Server Action 函数 */}
-            <form action={createPost}>
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-6">发布新帖子</h1>
+            <form action="/api/posts" method="POST">
                 <div className="mb-4">
-                    <label htmlFor="title" className="block text-lg font-medium mb-2">
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                         标题
                     </label>
                     <input
-                        id="title"
-                        name="title"
                         type="text"
+                        name="title"
+                        id="title"
                         required
-                        className="w-full p-2 border rounded-md text-black"
-                        placeholder="给你的帖子起个名字"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                 </div>
-
-                <div className="mb-6">
-                    <label htmlFor="content" className="block text-lg font-medium mb-2">
-                        内容 (支持 Markdown)
+                
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        内容
                     </label>
-                    <textarea
-                        id="content"
-                        name="content"
-                        required
-                        rows={10}
-                        className="w-full p-2 border rounded-md text-black"
-                        placeholder="尽情发挥吧..."
-                    ></textarea>
+                    <MDEditor
+                        value={content}
+                        onChange={(val) => setContent(val || '')}
+                        preview="edit"
+                    />
+                    <input type="hidden" name="content" value={content} />
                 </div>
-
+                
                 <button
                     type="submit"
-                    className="px-6 py-2 bg-green-600 text-white font-bold rounded-md hover:bg-green-700"
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                     发布
                 </button>

@@ -7,6 +7,7 @@ import { notFound, redirect } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PostInteractions from '@/components/PostInteractions'; // 引入我们刚创建的组件
+import { Components } from 'react-markdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,6 +146,14 @@ export default async function PostPage({ params }: PostPageProps) {
             .single();
         userHasLiked = !!like;
     }
+    // 定义代码块组件的 props 类型
+    type CodeBlockProps = {
+        node?: any;
+        inline?: boolean;
+        className?: string;
+        children?: React.ReactNode;
+    } & React.HTMLAttributes<HTMLElement>;
+    
 
     // --- 页面渲染区 (只负责展示) ---
     
@@ -152,21 +161,49 @@ export default async function PostPage({ params }: PostPageProps) {
     return (
         <div className="container mx-auto p-4">
             {/* 帖子正文 (Markdown) */}
-            <article className="prose lg:prose-xl max-w-none">
+            <article className="prose lg:prose-xl dark:prose-invert max-w-none">
                 <h1>{thread.title}</h1>
                 <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                     由 {authorName} 发布于 {new Date(thread.created_at).toLocaleString()} 
                 </div>
-            
+                
+
+                // 在 ReactMarkdown 组件中
                 <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        a: ({ ...props }) => {
-                            const href = props.href || '';
-                            // 检查链接是否包含协议，如果不包含，添加 https://
-                            const fullHref = href.match(/^https?:\/\//) ? href : `https://${href}`;
-                            return <a {...props} href={fullHref} target="_blank" rel="noopener noreferrer" />;
-                        }
+                        code: ({ inline, className, children, ...props }: CodeBlockProps) => {
+                            const match = /language-(\w+)/.exec(className || '');
+                            return !inline ? (
+                                <pre className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
+                                    <code className={className} {...props}>
+                                        {children}
+                                    </code>
+                                </pre>
+                            ) : (
+                                <code className="bg-gray-200 dark:bg-gray-700 rounded px-1" {...props}>
+                                    {children}
+                                </code>
+                            );
+                        },
+                        // 引用
+                        blockquote: ({node, children}) => (
+                            <blockquote className="border-l-4 border-gray-300 pl-4 italic">
+                                {children}
+                            </blockquote>
+                        ),
+                        // 图片
+                        img: ({node, ...props}) => (
+                            <img className="max-w-full h-auto rounded-lg shadow-lg" {...props} />
+                        ),
+                        // 表格
+                        table: ({children}) => (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    {children}
+                                </table>
+                            </div>
+                        ),
                     }}
                 >
                     {thread.content}

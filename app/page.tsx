@@ -60,6 +60,18 @@ export default async function Home() {
                     <p>当前没有热门帖子。</p>
                 )}
             </div>
+            {/* 在热门帖子列表下方添加 */}
+            <div className="mt-8 text-center">
+                <Link
+                    href="/posts"
+                    className="inline-flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                    <span>查看全部帖子</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </Link>
+            </div>
         </main>
     );
 }
