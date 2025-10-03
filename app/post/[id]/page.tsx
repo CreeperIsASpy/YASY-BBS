@@ -59,9 +59,8 @@ async function deletePost(formData: FormData) {
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-    
     const postIdTemp = await Promise.resolve(params)
-    const postId = postIdTemp.id;
+    const postId = parseInt(postIdTemp.id, 10); // 将字符串转换为数字
 
     const cookieStore = cookies();
     const supabase = createServerComponentClient({ 
@@ -83,13 +82,46 @@ export default async function PostPage({ params }: PostPageProps) {
         notFound();
     }
 
-    const { data: commentsData } = await supabase
+    // 先获取评论数据
+    const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
-        .select(`id, created_at, content, user_id, author:profiles(username)`)
+        .select('*')
         .eq('thread_id', postId)
         .order('created_at', { ascending: true });
-    const comments = commentsData?.map(c => ({ ...c, author: Array.isArray(c.author) ? c.author[0] : c.author })) || [];
 
+    console.log('commentsError:', commentsError);
+    console.log('commentsData:', commentsData);
+
+    // 如果有评论数据，获取对应的用户信息
+    let comments: {
+        id: number;
+        created_at: string;
+        content: string;
+        user_id: string;
+        author: { username: string };
+    }[] = [];
+    if (commentsData && commentsData.length > 0) {
+        // 获取所有评论作者的用户信息
+        const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', commentsData.map(c => c.user_id));
+
+        // 将用户信息与评论数据合并
+        comments = commentsData.map(comment => {
+            const author = profilesData?.find(p => p.id === comment.user_id);
+            return {
+                id: comment.id,
+                created_at: comment.created_at,
+                content: comment.content,
+                user_id: comment.user_id,
+                author: author ? { username: author.username } : { username: '匿名用户' }
+            };
+        });
+    }
+
+    console.log('处理后的评论数据:', comments);
+    
     // 获取帖子作者信息
     const { data: authorData } = await supabase
         .from('profiles')
@@ -144,7 +176,7 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* 将所有交互逻辑和数据都交给客户端组件处理 */}
             <PostInteractions
                 threadId={thread.id}
-                initialComments={comments || []}
+                initialComments={comments}
                 initialLikeCount={likeCount || 0}
                 userHasLiked={userHasLiked}
                 user={session?.user || null}
