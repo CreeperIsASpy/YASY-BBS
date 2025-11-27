@@ -8,7 +8,7 @@ import Header from '@/components/Header'; // 引入我们刚创建的 Header 组
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: '甲辰级 BBS',
+    title: '甲辰级论坛',
     description: '由 Next.js 和 Supabase 强力驱动，黄正源同学和 Gemini 携手开发',
 };
 
